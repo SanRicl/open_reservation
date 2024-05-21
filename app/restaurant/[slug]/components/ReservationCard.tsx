@@ -32,8 +32,8 @@ const ReservationCard = ({
     return setSelectedDate(null)
   }
 
-  const handleClick = () => {
-    fetchAvailabilities({
+  const handleClick = async () => {
+    await fetchAvailabilities({
       day,
       partySize,
       slug,
