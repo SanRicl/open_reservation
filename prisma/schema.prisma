@@ -1,0 +1,167 @@
+model User {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name String
+  last_name  String
+  city       String
+  email      String @unique
+  phone      String
+  password   String
+
+  reviews Review[]
+
+  created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("user")
+}
+
+model Review {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  first_name    String
+  last_name     String
+  text          String
+  rating        Float
+  restaurant_id String   @db.Uuid
+  user_id       String@db.Uuid
+
+  users       User       @relation(fields: [user_id], references: [id])
+  restaurants Restaurant @relation(fields: [restaurant_id], references: [id])
+
+  created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("review")
+}
+
+model Restaurant {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar()
+  main_image  String   @db.VarChar()
+  description String   @db.VarChar()
+  open_time   String   @db.VarChar()
+  close_time  String   @db.VarChar()
+  slug        String   @unique @db.VarChar()
+  price       PRICE
+  location_id String@db.Uuid
+  cuisine_id  String@db.Uuid
+  images      String[]
+
+  items    Item[]
+  reviews  Review[]
+  bookings_tables Booking[]
+  tables Table[]
+
+  locations Location @relation(fields: [location_id], references: [id])
+  cuisines  Cuisine  @relation(fields: [cuisine_id], references: [id])
+
+  
+ created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("restaurant")
+}
+
+model Item {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String @db.VarChar()
+  price         String
+  description   String @db.VarChar()
+  restaurant_id String@db.Uuid
+
+  restaurants Restaurant @relation(fields: [restaurant_id], references: [id])
+
+   created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("item")
+}
+
+model Location {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @db.VarChar()
+
+  restaurants Restaurant[]
+
+   created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("location")
+}
+
+model Cuisine {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @db.VarChar()
+
+  restaurants Restaurant[]
+
+  created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  @@map("cuisine")
+}
+
+enum PRICE {
+  CHEAP
+  REGULAR
+  EXPENSIVE
+}
+
+model Booking {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  booking_time      DateTime
+  number_of_people  Int
+  booker_phone      String
+  booker_email      String
+  booker_first_name String
+  booker_last_name String
+  booker_occasion  String?
+  booker_request    String?
+  created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  restaurant_id String @db.Uuid
+
+  bookings_tables BookingTable[]
+  restaurants Restaurant @relation(fields: [restaurant_id], references: [id])
+
+  @@map("booking")
+}
+
+model Table {
+  id                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seats Int
+  restaurant_id String @db.Uuid
+
+  created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  
+  bookings_tables BookingTable[]
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [id])
+
+  @@map("table")
+}
+
+model BookingTable {
+  booking_id String@db.Uuid
+  table_id   String@db.Uuid
+  
+ created_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                              @default(now()) @db.Timestamptz(6)
+
+  booking    Booking  @relation(fields: [booking_id], references: [id])
+  table      Table    @relation(fields: [table_id], references: [id])
+
+  @@id([booking_id, table_id])
+  @@map("booking_table")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
